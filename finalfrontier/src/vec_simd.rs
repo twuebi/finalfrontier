@@ -11,7 +11,11 @@ use std::arch::x86_64::*;
 /// This SIMD-vectorized function computes the dot product
 /// (BLAS sdot).
 cfg_if! {
-    if #[cfg(target_feature = "avx")] {
+    if #[cfg(all(target_feature = "avx", target_feature = "fma"))] {
+        pub fn dot(u: ArrayView1<f32>, v: ArrayView1<f32>) -> f32 {
+            unsafe { dot_fma(u, v) }
+        }
+    } else if #[cfg(target_feature = "avx")] {
         pub fn dot(u: ArrayView1<f32>, v: ArrayView1<f32>) -> f32 {
             unsafe { dot_f32x8(u, v) }
         }
@@ -93,6 +97,7 @@ unsafe fn dot_f32x4(u: ArrayView1<f32>, v: ArrayView1<f32>) -> f32 {
     _mm_cvtss_f32(sums) + dot_unvectorized(u, v)
 }
 
+#[allow(dead_code)]
 #[cfg(target_feature = "avx")]
 unsafe fn dot_f32x8(u: ArrayView1<f32>, v: ArrayView1<f32>) -> f32 {
     assert_eq!(u.len(), v.len());
@@ -110,10 +115,39 @@ unsafe fn dot_f32x8(u: ArrayView1<f32>, v: ArrayView1<f32>) -> f32 {
         let ux8 = _mm256_loadu_ps(&u[0] as *const f32);
         let vx8 = _mm256_loadu_ps(&v[0] as *const f32);
 
-        // Future: support FMA?
-        // sums = _mm256_fmadd_ps(a, b, sums);
-
         sums = _mm256_add_ps(_mm256_mul_ps(ux8, vx8), sums);
+
+        u = &u[8..];
+        v = &v[8..];
+    }
+
+    sums = _mm256_hadd_ps(sums, sums);
+    sums = _mm256_hadd_ps(sums, sums);
+
+    // Sum sums[0..4] and sums[4..8].
+    let sums = _mm_add_ps(_mm256_castps256_ps128(sums), _mm256_extractf128_ps(sums, 1));
+
+    _mm_cvtss_f32(sums) + dot_unvectorized(u, v)
+}
+
+#[cfg(target_feature = "avx")]
+unsafe fn dot_fma(u: ArrayView1<f32>, v: ArrayView1<f32>) -> f32 {
+    assert_eq!(u.len(), v.len());
+
+    let mut u = u
+        .as_slice()
+        .expect("Cannot apply SIMD instructions on non-contiguous data.");
+    let mut v = &v
+        .as_slice()
+        .expect("Cannot apply SIMD instructions on non-contiguous data.")[..u.len()];
+
+    let mut sums = _mm256_setzero_ps();
+
+    while u.len() >= 8 {
+        let ux8 = _mm256_loadu_ps(&u[0] as *const f32);
+        let vx8 = _mm256_loadu_ps(&v[0] as *const f32);
+
+        sums = _mm256_fmadd_ps(ux8, vx8, sums);
 
         u = &u[8..];
         v = &v[8..];
