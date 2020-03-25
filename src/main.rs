@@ -13,7 +13,7 @@ static DEFAULT_CLAP_SETTINGS: &[AppSettings] = &[
 
 fn main() {
     // Known subapplications.
-    let apps = vec![subcommands::DepsApp::app(), subcommands::SkipgramApp::app()];
+    let apps = vec![subcommands::DepsApp::app(), subcommands::SkipgramApp::app(), subcommands::WordPieceApp::app()];
 
     let version = if let Some(git_desc) = option_env!("MAYBE_FINALFRONTIER_GIT_DESC") {
         git_desc
@@ -43,6 +43,9 @@ fn main() {
         "deps" => subcommands::DepsApp::parse(matches.subcommand_matches("deps").unwrap()).run(),
         "skipgram" => {
             subcommands::SkipgramApp::parse(matches.subcommand_matches("skipgram").unwrap()).run()
+        }
+        "wordpiece" => {
+            subcommands::WordPieceApp::parse(matches.subcommand_matches("wordpiece").unwrap()).run()
         }
         _unknown => unreachable!(),
     }

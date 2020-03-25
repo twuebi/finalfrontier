@@ -183,3 +183,16 @@ pub struct SkipGramConfig {
     /// and the 5 tokens succeeding the focus token.
     pub context_size: u32,
 }
+
+/// Hyperparameters for SkipGram-like models.
+#[derive(Clone, Copy, Debug, Serialize)]
+#[serde(tag = "type")]
+#[serde(rename = "WordPieces")]
+pub struct WordPieceConfig {
+    /// The number of preceding and succeeding tokens that will be consider
+    /// as context during training.
+    ///
+    /// For example, a context size of 5 will consider the 5 tokens preceding
+    /// and the 5 tokens succeeding the focus token.
+    pub context_size: u32,
+}

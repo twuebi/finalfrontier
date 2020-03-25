@@ -10,5 +10,8 @@ pub use self::progress::show_progress;
 mod skipgram;
 pub use self::skipgram::SkipgramApp;
 
+mod wordpiece;
+pub use self::wordpiece::WordPieceApp;
+
 mod traits;
 pub use self::traits::FinalfrontierApp;

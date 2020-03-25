@@ -151,7 +151,9 @@ where
 /// Add begin/end-of-word brackets.
 pub(crate) fn bracket(word: &str) -> String {
     let mut bracketed = String::new();
-    bracketed.push(BOW);
+    if !word.starts_with("#") {
+        bracketed.push(BOW);
+    }
     bracketed.push_str(word);
     bracketed.push(EOW);
 

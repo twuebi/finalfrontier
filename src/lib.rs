@@ -1,7 +1,7 @@
 mod config;
 pub use crate::config::{
     BucketConfig, CommonConfig, DepembedsConfig, LossType, ModelType, NGramConfig,
-    SimpleVocabConfig, SkipGramConfig, SubwordVocabConfig,
+    SimpleVocabConfig, SkipGramConfig, SubwordVocabConfig, WordPieceConfig,
 };
 
 mod deps;
@@ -28,7 +28,9 @@ mod train_model;
 pub use crate::train_model::{TrainModel, Trainer};
 
 pub(crate) mod skipgram_trainer;
+pub(crate) mod wordpiece_trainer;
 pub use crate::skipgram_trainer::SkipgramTrainer;
+pub use crate::wordpiece_trainer::WordPieceTrainer;
 
 pub(crate) mod util;
 
